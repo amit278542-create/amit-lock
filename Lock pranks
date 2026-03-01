@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<style>
+
+body{
+margin:0;
+background:#000;
+overflow:hidden;
+font-family: 'Courier New', Courier, monospace;
+height:100vh;
+color:#0f0;
+user-select: none;
+}
+
+/* MATRIX CANVAS - Always on top */
+canvas{
+position:fixed;
+top:0;
+left:0;
+z-index:1;
+display:none;
+}
+
+/* ================= PAGE 1: LOCK SCREEN ================= */
+
+#lockScreen{
+position:absolute;
+width:100%;
+height:100%;
+display:flex;
+flex-direction:column;
+align-items:center;
+justify-content:flex-start; 
+padding-top: 50px; 
+z-index:10;
+background:radial-gradient(circle, #222 0%, #000 100%);
+color:#fff;
+}
+
+#timeWrapper{
+display:flex;
+justify-content:center;
+align-items:center; 
+gap:0px; /* Gap kam hai */
+}
+
+#mainTime{
+font-size:70px;
+font-weight:bold;
+letter-spacing:2px;
+line-height:1;
+}
+
+.hour{color:#ff1f1f;}
+.minute{color:#ffffff;}
+
+.colonBig{
+color:#ff8c42;
+animation:blink 1s infinite;
+}
+
+@keyframes blink{
+0%{opacity:1;}
+50%{opacity:0;}
+100%{opacity:1;}
+}
+
+#rightBlock{
+display:flex;
+flex-direction:column;
+align-items:flex-start;
+gap: 0px; 
+margin-left: 2px;
+margin-top: -10px;
+}
+
+#ampm{
+font-size:18px;
+color:#ff0044;
+font-weight: bold;
+line-height:1;
+}
+
+#seconds{
+color:#00ff88;
+font-size:18px;
+font-weight: bold;
+line-height:1;
+}
+
+#date{
+margin-top:10px;
+font-size:20px;
+letter-spacing:3px;
+color:#fff;
+}
+
+/* Tap to Unlock Button Wrapper */
+#unlockWrapper {
+position:absolute;
+bottom: 120px;
+display: flex;
+align-items: center;
+gap: 8px;
+}
+
+/* SWAPPED: Hint Text - NOW CYAN */
+#hint{
+font-weight:bold;
+letter-spacing:2px;
+font-size:18px;
+color: #00ffff; /* Cyan colour */
+padding: 10px 20px; 
+background: rgba(0, 255, 255, 0.05); /* Matching background */
+animation:pulseCyan 1.5s infinite;
+}
+
+/* SWAPPED: Arrows - NOW MAGENTA */
+.text-arrow {
+font-size: 24px;
+font-weight: bold;
+color: magenta; /* Magenta colour for arrows */
+animation: textArrowPulse 1s infinite alternate;
+}
+
+@keyframes textArrowPulse {
+0% { opacity: 0.3; text-shadow: 0 0 5px magenta; }
+100% { opacity: 1; text-shadow: 0 0 15px magenta, 0 0 25px magenta; }
+}
+
+@keyframes pulseCyan{
+0%{opacity:0.5; box-shadow: 0 0 5px #00ffff;}
+50%{opacity:1; box-shadow: 0 0 20px #00ffff;}
+100%{opacity:0.5; box-shadow: 0 0 5px #00ffff;}
+}
+
+/* ================= PAGE 2: COMMAND LINE LOADING ================= */
+
+#loadingScreen{
+display:none;
+position:absolute;
+width:100%;
+height:100%;
+z-index:15;
+background:#000;
+color:#00ff00; /* Green text */
+padding: 15px;
+box-sizing: border-box;
+font-family: 'Courier New', monospace;
+font-size: 13px;
+line-height: 1.2;
+overflow: hidden;
+}
+
+#consoleText {
+width: 100%;
+height: 90%;
+overflow-y: hidden;
+}
+
+.cmd-line {
+margin-bottom: 3px;
+text-shadow: 0 0 3px #00ff00;
+}
+
+/* COLORS FOR KEYWORDS */
+.cmd-warn { color: #ffaa00; text-shadow: 0 0 5px #ffaa00; }  /* Yellow */
+.cmd-succ { color: #00ffff; text-shadow: 0 0 5px #00ffff; }  /* Cyan */
+.cmd-alert { color: #ff0055; text-shadow: 0 0 5px #ff0055; } /* Red */
+.cmd-error { color: #ff0000; text-shadow: 0 0 5px #ff0000; } /* Dark Red */
+
+/* ================= PAGE 3: ALERT SCREEN ================= */
+
+#alertScreen{
+display:none;
+position:absolute;
+width:100%;
+height:100%;
+z-index:20;
+text-align:center;
+background:rgba(0,0,0,0.7); /* Darker background */
+}
+
+#logo{
+position:absolute;
+top:50px;
+width:100%;
+font-size:15vw;
+font-weight:900;
+color:#000;
+animation:amitFade 3s ease-in-out infinite;
+}
+
+@keyframes amitFade{
+0%{opacity:1;}
+50%{opacity:0.2;}
+100%{opacity:1;}
+}
+
+#unauthorized{
+position:absolute;
+top:35%;
+width:100%;
+font-size:24px;
+font-weight:bold;
+color:#fff;
+background-color:rgba(255,0,0,0.6);
+padding:10px 0;
+text-transform:uppercase;
+}
+
+/* ================= FINGERPRINT CSS (5 Circles) ================= */
+#biometricArea{
+position:absolute;
+bottom: 80px;
+width:100%;
+text-align:center;
+}
+
+#fingerprintContainer {
+width: 100px;
+height: 100px;
+margin: 0 auto;
+position: relative;
+}
+
+.ring {
+position: absolute;
+border-radius: 50%;
+border: 2px solid rgba(255,0,0,0.5); /* Border thickness */
+}
+
+.r1 { width: 100%; height: 100%; border-top: 2px solid red; animation: spin1 1.8s linear infinite; }
+.r2 { width: 85%; height: 85%; top: 7.5%; left: 7.5%; border-right: 2px solid red; animation: spin2 1.6s linear infinite reverse; }
+.r3 { width: 70%; height: 70%; top: 15%; left: 15%; border-bottom: 2px solid red; animation: spin3 1.4s linear infinite; }
+.r4 { width: 55%; height: 55%; top: 22.5%; left: 22.5%; border-left: 2px solid red; animation: spin4 1.2s linear infinite reverse; }
+.r5 { width: 40%; height: 40%; top: 30%; left: 30%; border-top: 2px solid red; animation: spin5 1s linear infinite; }
+
+@keyframes spin1 { 0% { transform: rotate(0); } 100% { transform: rotate(360deg); } }
+@keyframes spin2 { 0% { transform: rotate(360deg); } 100% { transform: rotate(0); } }
+@keyframes spin3 { 0% { transform: rotate(0); } 100% { transform: rotate(360deg); } }
+@keyframes spin4 { 0% { transform: rotate(360deg); } 100% { transform: rotate(0); } }
+@keyframes spin5 { 0% { transform: rotate(0); } 100% { transform: rotate(360deg); } }
+
+#bioText{
+margin-top:30px;
+font-size:16px;
+color:#fff;
+text-shadow:0 0 5px red;
+text-transform: uppercase;
+}
+
+</style>
+</head>
+<body>
+
+<canvas id="matrix"></canvas>
+
+<div id="lockScreen" onclick="startPrank()">
+<div id="timeWrapper">
+<div id="mainTime"></div>
+<div id="rightBlock">
+<div id="ampm"></div>
+<div id="seconds"></div>
+</div>
+</div>
+<div id="date"></div>
+<div id="unlockWrapper">
+    <div class="text-arrow">>></div> 
+    <div class="text-arrow">>></div>
+    <div id="hint">Tap to Unlock</div>
+    <div class="text-arrow"><<</div>
+    <div class="text-arrow"><<</div>
+</div>
+</div>
+
+<div id="loadingScreen">
+<div id="consoleText">
+<div class="cmd-line">> Initializing terminal...</div>
+</div>
+</div>
+
+<div id="alertScreen">
+<div id="logo">AMIT</div>
+<div id="unauthorized">UNAUTHORIZED ACCESS</div>
+
+<div id="biometricArea">
+    <div id="fingerprintContainer">
+        <div class="ring r1"></div>
+        <div class="ring r2"></div>
+        <div class="ring r3"></div>
+        <div class="ring r4"></div>
+        <div class="ring r5"></div>
+    </div>
+    
+    <div id="bioText">
+        FINGERPRINT AUTHENTICATION <span style="color:red; font-weight:bold;">ERROR</span>
+    </div>
+</div>
+</div>
+
+<script>
+// --- TIME AND MATRIX LOGIC ---
+function updateTime(){
+let now=new Date();
+let hour=now.getHours();
+let ampm = hour >= 12 ? "PM" : "AM";
+hour = hour % 12;
+hour = hour ? hour : 12;
+hour=hour.toString().padStart(2,'0');
+let minute=now.getMinutes().toString().padStart(2,'0');
+let second=now.getSeconds().toString().padStart(2,'0');
+document.getElementById("mainTime").innerHTML = '<span class="hour">'+hour+'</span>'+'<span class="colonBig">:</span>'+'<span class="minute">'+minute+'</span>';
+document.getElementById("ampm").innerHTML = ampm;
+document.getElementById("seconds").innerHTML = ":" + second;
+let weekday=now.toLocaleDateString(undefined,{weekday:'short'});
+let month=now.toLocaleDateString(undefined,{month:'short'});
+let day=now.getDate();
+document.getElementById("date").innerHTML = weekday + ", " + month + " " + day;
+}
+setInterval(updateTime,1000);
+updateTime();
+
+function startPrank(){
+document.getElementById("lockScreen").style.display="none";
+document.getElementById("loadingScreen").style.display="block";
+document.getElementById("matrix").style.display="block";
+startMatrix();
+const consoleText = document.getElementById("consoleText");
+const commands = [
+{text: "> Accessing root directory...", speed: 150},
+{text: "> Scanning for vulnerabilities...", speed: 100},
+{text: "> <span class='cmd-warn'>[WARNING]</span> Firewall detected.", speed: 200},
+{text: "> Bypassing security protocols...", speed: 100},
+{text: "> <span class='cmd-succ'>[SUCCESS]</span> Firewall bypassed.", speed: 150},
+{text: "> Injecting malicious payload...", speed: 100},
+{text: "> <span class='cmd-succ'>[SUCCESS]</span> Payload injected.", speed: 150},
+{text: "> Locating user database...", speed: 50},
+{text: "> <span class='cmd-alert'>[ALERT]</span> High security threat detected.", speed: 100},
+{text: "> Analyzing database files...", speed: 80},
+{text: "> <span class='cmd-error'>[ERROR]</span> Permission denied for /etc/shadow", speed: 150},
+{text: "> Bypassing permissions...", speed: 80},
+{text: "> <span class='cmd-succ'>[SUCCESS]</span> Root access granted.", speed: 100},
+{text: "> Downloading sensitive files...", speed: 50},
+{text: "> <span class='cmd-succ'>[SUCCESS]</span> Files downloaded.", speed: 100},
+{text: "> Extracting personal data...", speed: 50},
+{text: "> <span class='cmd-succ'>[SUCCESS]</span> Data extracted.", speed: 100},
+{text: "> Clearing logs and history...", speed: 50},
+{text: "> <span class='cmd-succ'>[SUCCESS]</span> Logs cleared.", speed: 50},
+{text: "> <span class='cmd-warn'>[WARNING]</span> System corruption imminent...", speed: 100},
+{text: "> Initiating system lockdown...", speed: 300},
+{text: "> Accessing camera...", speed: 100},
+{text: "> Accessing microphone...", speed: 100},
+{text: "> <span class='cmd-succ'>[SUCCESS]</span> Unauthorized access complete.", speed: 100},
+{text: "> Preparing for alert...", speed: 500}
+];
+let i = 0;
+function runCommands() {
+if (i < commands.length) {
+let cmdDiv = document.createElement("div");
+cmdDiv.className = "cmd-line";
+cmdDiv.innerHTML = commands[i].text;
+consoleText.appendChild(cmdDiv);
+consoleText.scrollTop = consoleText.scrollHeight;
+i++;
+setTimeout(runCommands, commands[i-1].speed);
+} else {
+setTimeout(() => {
+document.getElementById("loadingScreen").style.display="none";
+document.getElementById("alertScreen").style.display="block";
+startRandomGlow();
+// --- START VIBRATION ---
+if ("vibrate" in navigator) {
+    navigator.vibrate([500, 500, 500, 500, 500, 500, 500, 500]); 
+}
+}, 500);
+}
+}
+runCommands();
+}
+
+const logo = document.getElementById("logo");
+const colors = ["#ff0000","#00ffea","#00ff00","#ff00ff","#ff8800","#00aaff","#ff0044"];
+function startRandomGlow(){
+setInterval(()=>{
+let color = colors[Math.floor(Math.random()*colors.length)];
+logo.style.textShadow = "0 0 10px "+color+", 0 0 40px "+color+", 0 0 80px "+color;
+}, 500);
+}
+
+function startMatrix(){
+let canvas=document.getElementById("matrix");
+let ctx=canvas.getContext("2d");
+canvas.width=window.innerWidth;
+canvas.height=window.innerHeight;
+let characters = "アィイゥウェエォオカガキギクグケゲコゴサザシジスズセゼソゾタダチヂッツヅテデトドナニヌネノハバパヒビピフブプヘベペホボポマミムメモャヤュユョヨラリルレロヮワヰヱヲンヴヵヶ";
+let fontSize=14;
+let columns=canvas.width/fontSize;
+let drops=[];
+for(let x=0;x<columns;x++){drops[x]=1;}
+function draw(){
+ctx.fillStyle="rgba(0,0,0,0.05)";
+ctx.fillRect(0,0,canvas.width,canvas.height);
+ctx.fillStyle="#0F0";
+ctx.font=fontSize+"px monospace";
+for(let i=0;i<drops.length;i++){
+let text=characters.charAt(Math.floor(Math.random()*characters.length));
+ctx.fillText(text,i*fontSize,drops[i]*fontSize);
+if(drops[i]*fontSize>canvas.height && Math.random()>0.975)
+drops[i]=0;
+drops[i]++;
+}
+}
+setInterval(draw,35);
+}
+</script>
+</body>
+</html>
